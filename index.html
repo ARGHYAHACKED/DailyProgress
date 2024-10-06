@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Monk Mode Routine Tracker</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      color: #333;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 20px auto;
+      background-color: rgba(255, 255, 255, 0.8); /* Transparent background */
+      padding: 30px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      border-radius: 10px;
+      background-image: url('https://plus.unsplash.com/premium_photo-1673803529092-936e10bd19cb?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8Y29uc2lzdGVuY3l8ZW58MHx8MHx8fDA%3D');
+      background-size: cover;
+      background-position: center;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 2.5em;
+      color: #fff;
+    }
+
+    /* Scrollable date bar */
+    .day-selector-container {
+      overflow-x: auto;
+      white-space: nowrap;
+      margin-bottom: 20px;
+    }
+
+    .day-selector {
+      display: inline-flex;
+      justify-content: flex-start;
+      align-items: center;
+    }
+
+    .day-selector button {
+      padding: 10px 15px;
+      margin: 5px;
+      font-size: 1em;
+      background-color: #3A506B;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      white-space: nowrap; /* Prevents text wrapping */
+    }
+
+    .day-selector button.completed {
+      background-color: green;
+    }
+
+    .day-selector button:hover {
+      background-color: #1C2541;
+    }
+
+    .task-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .task-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 15px;
+      border-bottom: 2px solid #E5E5E5;
+      background-color: #f5f7fa;
+      border-radius: 5px;
+      margin-bottom: 10px;
+      transition: background-color 0.3s ease;
+    }
+
+    .task-item:hover {
+      background-color: #c8d6e5;
+    }
+
+    /* Checkbox styling */
+    .task-item input {
+      margin-right: 10px;
+      cursor: pointer;
+      width: 25px;
+      height: 25px;
+      transform: scale(1.2); /* Make checkboxes larger */
+      transition: transform 0.3s ease;
+    }
+
+    .task-item input:checked {
+      transform: scale(1.5); /* Animation when checked */
+    }
+
+    .task-item span {
+      flex-grow: 1;
+      font-size: 1.2em;
+      color: #1C2541;
+    }
+
+    .completed {
+      text-decoration: line-through;
+      color: #A9A9A9;
+    }
+
+    /* Colorful backgrounds for tasks */
+    .task-item:nth-child(odd) {
+      background-color: #98C1D9;
+    }
+
+    .task-item:nth-child(even) {
+      background-color: #EE6C4D;
+    }
+
+    /* Completed tasks background */
+    .task-item.completed {
+      background-color: #C1C1C1;
+    }
+
+    .clock {
+      position: fixed;
+      top: 10px;
+      right: 20px;
+      background-color: #3A506B;
+      color: white;
+      padding: 10px;
+      border-radius: 5px;
+      font-size: 1.2em;
+      font-weight: bold;
+    }
+
+    /* Styling the scrollbar */
+    .day-selector-container::-webkit-scrollbar {
+      height: 8px;
+    }
+
+    .day-selector-container::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+
+    .day-selector-container::-webkit-scrollbar-thumb {
+      background: #3A506B;
+      border-radius: 5px;
+    }
+
+    .day-selector-container::-webkit-scrollbar-thumb:hover {
+      background: #1C2541;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 600px) {
+      .task-item span {
+        font-size: 1em;
+      }
+      .day-selector button {
+        font-size: 0.9em;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="clock" id="clock"></div>
+
+  <div class="container">
+    <h1>Monk Mode Routine Tracker</h1>
+
+    <div class="day-selector-container">
+      <div class="day-selector" id="day-selector"></div>
+    </div>
+
+    <ul class="task-list" id="task-list"></ul>
+  </div>
+
+  <script>
+    // Array of tasks
+    const tasks = [
+      { task: 'Wake Up', time: '5:00 AM', duration: '15 mins' },
+      { task: 'Morning Water/Deep Breathing', time: '5:15 AM', duration: '15 mins' },
+      { task: 'Gate Study', time: '5:30 AM', duration: '2.5 hours' },
+      { task: 'Break (Relax/Breakfast)', time: '8:00 AM', duration: '1 hour' },
+      { task: 'Coding Practice', time: '9:00 AM', duration: '1 hour' },
+      { task: 'Group Study/Discussion', time: '10:00 AM', duration: '2 hours' },
+      { task: 'Lunch', time: '12:00 PM', duration: '1 hour' },
+      { task: 'Research on Projects', time: '1:00 PM', duration: '1 hour' },
+      { task: 'Afternoon Study', time: '2:00 PM', duration: '2 hours' },
+      { task: 'Exercise/Walk', time: '4:00 PM', duration: '30 mins' },
+      { task: 'Relaxation/Reading', time: '4:30 PM', duration: '30 mins' },
+      { task: 'Second Study Session', time: '5:00 PM', duration: '2 hours' },
+      { task: 'Dinner', time: '7:00 PM', duration: '1 hour' },
+      { task: 'Creative Work (Hobbies)', time: '8:00 PM', duration: '1 hour' },
+      { task: 'Relaxation (TV/Books)', time: '9:00 PM', duration: '1 hour' },
+      { task: 'Meditation/Gratitude Journal', time: '10:00 PM', duration: '15 mins' },
+      { task: 'Prepare for Bed', time: '10:15 PM', duration: '30 mins' },
+      { task: 'Sleep', time: '10:45 PM', duration: '7 hours' },
+      { task: 'Reflect on the Day', time: '5 mins', duration: '5 mins' },
+      { task: 'Plan for Tomorrow', time: '5 mins', duration: '5 mins' },
+      { task: 'Review Goals', time: '5 mins', duration: '5 mins' }
+    ];
+
+    // Function to format the date
+    function formatDate(date) {
+      return date.toLocaleDateString('en-US', {
+        month: 'numeric',
+        day: 'numeric',
+        year: 'numeric',
+      });
+    }
+
+    // Generate 20 days starting from 9/10/2024
+    const startDate = new Date('2024-10-09');
+    const days = Array.from({ length: 20 }, (_, i) => {
+      const currentDay = new Date(startDate);
+      currentDay.setDate(startDate.getDate() + i);
+      return `Day ${i + 1} (${formatDate(currentDay)})`;
+    });
+
+    // Load day selector buttons
+    const daySelector = document.getElementById('day-selector');
+    days.forEach((day, index) => {
+      const button = document.createElement('button');
+      button.textContent = day;
+      button.onclick = () => loadTasks(index + 1);
+      daySelector.appendChild(button);
+    });
+
+    // Load tasks for selected day
+    function loadTasks(day) {
+      const taskList = document.getElementById('task-list');
+      taskList.innerHTML = '';  // Clear previous tasks
+
+      tasks.forEach((task, index) => {
+        const isCompleted = JSON.parse(localStorage.getItem(`task-${day}-${index}`)) || false;
+
+        const li = document.createElement('li');
+        li.classList.add('task-item');
+        if (isCompleted) li.classList.add('completed');
+
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.checked = isCompleted;
+        checkbox.onchange = (e) => {
+          localStorage.setItem(`task-${day}-${index}`, JSON.stringify(e.target.checked));
+          li.classList.toggle('completed', e.target.checked);
+          checkDayCompletion(day);
+        };
+
+        const taskText = document.createElement('span');
+        taskText.textContent = `${task.task} - ${task.time} (${task.duration})`;
+
+        li.appendChild(checkbox);
+        li.appendChild(taskText);
+        taskList.appendChild(li);
+      });
+      
+      checkDayCompletion(day);
+    }
+
+    // Check if all tasks are completed and mark the day button as green
+    function checkDayCompletion(day) {
+      const allCompleted = tasks.every((_, index) => JSON.parse(localStorage.getItem(`task-${day}-${index}`)));
+      const dayButtons = daySelector.querySelectorAll('button');
+      if (allCompleted) {
+        dayButtons[day - 1].classList.add('completed');
+      } else {
+        dayButtons[day - 1].classList.remove('completed');
+      }
+    }
+
+    // Clock update function
+    function updateClock() {
+      const clock = document.getElementById('clock');
+      const now = new Date();
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+      clock.textContent = `${hours}:${minutes}:${seconds}`;
+    }
+    setInterval(updateClock, 1000);
+  </script>
+</body>
+</html>
